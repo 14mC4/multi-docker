@@ -1,0 +1,26 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t yrroth/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run yrroth/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t yrroth/multi-client ./client
+  - docker build -t yrroth/multi-nginx ./nginx
+  - docker build -t yrroth/multi-server ./server
+  - docker build -t yrroth/multi-worker ./worker
+  
+  # Log in to docker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  # Take those images and push them to Docker Hub
+
+  - docker push yrroth/multi-client
+  - docker push yrroth/multi-server
+  - docker push yrroth/multi-nginx
+  - docker push yrroth/multi-worker
+
